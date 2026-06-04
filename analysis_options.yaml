@@ -1,0 +1,14 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    implementation_imports: true
+    always_use_package_imports: true
+    avoid_relative_lib_imports: true
+    depend_on_referenced_packages: true
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/generated/**"
