@@ -41,5 +41,17 @@ void main() {
       expect(provider, isA<MemoryImage>());
       expect((provider as MemoryImage).bytes, isNotEmpty);
     });
+
+    test('maps png data URIs to MemoryImage before file fallback', () {
+      const dataUri =
+          'data:image/png;base64,'
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8'
+          '/x8AAwMCAO+/p9sAAAAASUVORK5CYII=';
+
+      final provider = sourceToProvider(dataUri);
+
+      expect(provider, isA<MemoryImage>());
+      expect((provider as MemoryImage).bytes, isNotEmpty);
+    });
   });
 }
