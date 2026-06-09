@@ -31,15 +31,26 @@ bool _looksLikeFlutterAssetPath(String source) {
 /// App-specific refs such as `media:...` should be resolved by the host before
 /// reaching this helper.
 ImageProvider<Object> sourceToProvider(String source) {
-  final ref = parseCanvasAssetRef(source);
+  final raw = source.trim();
+  final lower = raw.toLowerCase();
+
+  // Standard inline image data. This must never fall through to
+  // fileImageProvider on web.
+  if (lower.startsWith('data:')) {
+    final data = UriData.parse(raw);
+    final bytes = data.contentAsBytes();
+    return MemoryImage(Uint8List.fromList(bytes));
+  }
+
+  final ref = parseCanvasAssetRef(raw);
 
   if (ref is CanvasUrlAssetRef || ref is CanvasBlobUrlAssetRef) {
     return NetworkImage(ref.raw);
   }
 
   if (ref is CanvasDataUriAssetRef) {
-    final data = Uri.parse(ref.raw).data;
-    final bytes = data?.contentAsBytes() ?? const <int>[];
+    final data = UriData.parse(ref.raw);
+    final bytes = data.contentAsBytes();
     return MemoryImage(Uint8List.fromList(bytes));
   }
 
@@ -55,8 +66,6 @@ ImageProvider<Object> sourceToProvider(String source) {
     return AssetImage(ref.raw);
   }
 
-  // Unknown raw refs are treated as local file paths only on IO platforms.
-  // Web hosts should resolve opaque refs before calling sourceToProvider.
   return fileImageProvider(ref.raw);
 }
 
