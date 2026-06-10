@@ -30,6 +30,7 @@ class CanvasExportSpec {
     // This keeps the exporter generic and delegates content-selection rules to
     // host applications.
     this.contentBoundsPolicy,
+    this.rendererOptions = CanvasRendererProfiles.documentExport,
   });
 
   final int widthPx;
@@ -52,6 +53,12 @@ class CanvasExportSpec {
 
   /// Custom policy for runtime content-bounds computation.
   final ContentBoundsPolicy? contentBoundsPolicy;
+
+  /// Renderer behavior used for export/raster output.
+  ///
+  /// Defaults to output-safe behavior: missing images are skipped rather than
+  /// drawn as editor placeholders.
+  final CanvasRendererOptions rendererOptions;
 
   ui.Color? get background => transparent ? null : const ui.Color(0xFFFFFFFF);
 }
@@ -198,8 +205,8 @@ class CanvasDocumentExporter {
       images: images,
       text: _pipeline,
       intrinsics: stableIntrinsics,
+      options: spec.rendererOptions,
     ).replay(canvas, built.ops);
-    canvas.restore();
 
     final picture = recorder.endRecording();
 
