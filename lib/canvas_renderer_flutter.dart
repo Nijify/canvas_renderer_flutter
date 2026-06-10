@@ -26,12 +26,7 @@ library;
 //    Mental model: take PaintOps from core, draw them onto a Flutter Canvas.
 // ============================================================================
 export 'src/flutter_canvas_renderer.dart'
-    show
-        CanvasDisplayQuality,
-        CanvasRenderer,
-        CanvasRendererOptions,
-        CanvasRendererProfiles,
-        MissingImageBehavior;
+    show CanvasRenderer, CanvasRendererOptions, MissingImageBehavior;
 
 export 'package:canvas_core/canvas_core_runtime.dart'
     show CanvasFit, ContentBoundsPolicy;
