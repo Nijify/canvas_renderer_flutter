@@ -75,10 +75,15 @@ class FlutterImagePool {
   /// Painters can listen to this to repaint without setState hacks.
   final ValueNotifier<int> revision = ValueNotifier<int>(0);
 
+  bool _disposed = false;
+
   bool get _hasUrlResolver =>
       assetUrlResolver != null || assetUrlsResolver != null;
 
-  void _bump() => revision.value++;
+  void _bump() {
+    if (_disposed) return;
+    revision.value++;
+  }
 
   /// Stable renderer-local key for cache maps.
   ///
@@ -120,6 +125,7 @@ class FlutterImagePool {
   }
 
   Future<void> _primeUrlCache(Set<String> sourceRefs) async {
+    if (_disposed) return;
     if (sourceRefs.isEmpty) return;
     if (!_hasUrlResolver) return;
 
@@ -131,6 +137,8 @@ class FlutterImagePool {
 
     if (assetUrlsResolver != null) {
       final resolvedByRef = await assetUrlsResolver!(missing);
+      if (_disposed) return;
+
       for (final ref in missing) {
         final resolved = resolvedByRef[ref]?.trim();
         if (resolved != null && resolved.isNotEmpty) {
@@ -147,12 +155,15 @@ class FlutterImagePool {
         missing.map((ref) async {
           try {
             final resolved = (await assetUrlResolver!(ref))?.trim();
+            if (_disposed) return;
+
             if (resolved != null && resolved.isNotEmpty) {
               _urlCache[ref] = resolved;
             } else {
               _urlCache.remove(ref);
             }
           } catch (_) {
+            if (_disposed) return;
             _urlCache.remove(ref);
           }
         }),
@@ -161,6 +172,7 @@ class FlutterImagePool {
   }
 
   Future<void> _primeMetaCache(Set<String> sourceRefs) async {
+    if (_disposed) return;
     if (sourceRefs.isEmpty) return;
     if (assetMetaResolver == null && assetMetasResolver == null) return;
 
@@ -172,6 +184,8 @@ class FlutterImagePool {
 
     if (assetMetasResolver != null) {
       final resolvedByRef = await assetMetasResolver!(missing);
+      if (_disposed) return;
+
       for (final ref in missing) {
         final size = resolvedByRef[ref];
         if (size != null) {
@@ -188,12 +202,15 @@ class FlutterImagePool {
         missing.map((ref) async {
           try {
             final size = await assetMetaResolver!(ref);
+            if (_disposed) return;
+
             if (size != null) {
               _metaCache[ref] = size;
             } else {
               _metaCache.remove(ref);
             }
           } catch (_) {
+            if (_disposed) return;
             _metaCache.remove(ref);
           }
         }),
@@ -229,6 +246,8 @@ class FlutterImagePool {
     required FlutterImageIntrinsics intrinsics,
     bool includeHidden = true,
   }) async {
+    if (_disposed) return;
+
     final imagesInScene = _collectImageNodes(
       scene,
       includeHidden: includeHidden,
@@ -247,8 +266,11 @@ class FlutterImagePool {
     }
 
     await _primeMetaCache(sourceRefs);
+    if (_disposed) return;
 
     for (final entry in sourceRefByElement.entries) {
+      if (_disposed) return;
+
       final sourceRef = entry.value;
       final meta = sourceRef == null ? null : _metaCache[sourceRef];
       intrinsics.setIntrinsicSize(entry.key, meta);
@@ -266,6 +288,8 @@ class FlutterImagePool {
     FlutterImageIntrinsics? intrinsics,
     bool includeHidden = true,
   }) async {
+    if (_disposed) return;
+
     final imagesInScene = _collectImageNodes(
       scene,
       includeHidden: includeHidden,
@@ -281,13 +305,18 @@ class FlutterImagePool {
     }
 
     await _primeUrlCache(sourceRefs);
+    if (_disposed) return;
+
     await _primeMetaCache(sourceRefs);
+    if (_disposed) return;
 
     final side = _decodeSide(targetW, targetH);
 
     final tasks = <Future<void>>[];
     for (final img in imagesInScene) {
       tasks.add(() async {
+        if (_disposed) return;
+
         final raw = img.data.sourcePath;
         final sourceRef = _sourceKeyFromRaw(raw);
         final src = (raw == null) ? null : _normalizedSourceSync(raw);
@@ -298,10 +327,14 @@ class FlutterImagePool {
         );
 
         void setImage(ui.Image? next) {
+          if (_disposed) return;
+
           images[img.id] = next;
           intrinsics?.setImage(img.id, next);
           _bump();
         }
+
+        if (_disposed) return;
 
         if (src == null || src.isEmpty) {
           _inflightKey.remove(img.id);
@@ -319,9 +352,12 @@ class FlutterImagePool {
           return;
         }
 
+        if (_disposed) return;
         _inflightKey[img.id] = key;
 
         try {
+          if (_disposed) return;
+
           final base = sourceToProvider(src);
 
           final prov = (dims.w != null && dims.h != null)
@@ -329,6 +365,7 @@ class FlutterImagePool {
               : withSize(base, width: side, height: null);
 
           final uiImg = await toUiImage(prov);
+          if (_disposed) return;
 
           _dlog('POOL_DECODE', 'el=${img.id} ok=${uiImg != null} key="$key"');
 
@@ -345,6 +382,8 @@ class FlutterImagePool {
           _loadedKey[img.id] = key;
           setImage(uiImg);
         } catch (e) {
+          if (_disposed) return;
+
           _dlog('POOL_DECODE', 'el=${img.id} exception=$e key="$key"');
           if (_inflightKey[img.id] == key) {
             _inflightKey.remove(img.id);
@@ -359,6 +398,9 @@ class FlutterImagePool {
   }
 
   void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+
     revision.dispose();
     images.clear();
     _loadedKey.clear();
