@@ -8,48 +8,16 @@ import 'package:canvas_renderer_flutter/src/flutter_linear_shader.dart';
 import 'package:canvas_renderer_flutter/src/flutter_mappers.dart';
 import 'package:canvas_renderer_flutter/src/flutter_text_pipeline.dart';
 
-enum CanvasDisplayQuality { thumbnail, preview, editor }
-
 enum MissingImageBehavior { placeholder, skip }
 
 class CanvasRendererOptions {
   const CanvasRendererOptions({
-    required this.imageFilterQuality,
-    required this.missingImageBehavior,
+    this.imageFilterQuality = ui.FilterQuality.none,
+    this.missingImageBehavior = MissingImageBehavior.placeholder,
   });
 
   final ui.FilterQuality imageFilterQuality;
   final MissingImageBehavior missingImageBehavior;
-}
-
-abstract final class CanvasRendererProfiles {
-  static const thumbnail = CanvasRendererOptions(
-    imageFilterQuality: ui.FilterQuality.medium,
-    missingImageBehavior: MissingImageBehavior.skip,
-  );
-
-  static const preview = CanvasRendererOptions(
-    imageFilterQuality: ui.FilterQuality.none,
-    missingImageBehavior: MissingImageBehavior.skip,
-  );
-
-  static const documentExport = CanvasRendererOptions(
-    imageFilterQuality: ui.FilterQuality.none,
-    missingImageBehavior: MissingImageBehavior.skip,
-  );
-
-  static const editor = CanvasRendererOptions(
-    imageFilterQuality: ui.FilterQuality.none,
-    missingImageBehavior: MissingImageBehavior.placeholder,
-  );
-
-  static CanvasRendererOptions forDisplayQuality(CanvasDisplayQuality quality) {
-    return switch (quality) {
-      CanvasDisplayQuality.thumbnail => thumbnail,
-      CanvasDisplayQuality.preview => preview,
-      CanvasDisplayQuality.editor => editor,
-    };
-  }
 }
 
 class CanvasRenderer {
@@ -66,7 +34,7 @@ class CanvasRenderer {
     Map<ElementId, ui.Image?>? images,
     FlutterTextPipeline? text,
     this.intrinsics,
-    this.options = CanvasRendererProfiles.editor,
+    this.options = const CanvasRendererOptions(),
   }) : images = images ?? <ElementId, ui.Image?>{},
        text = text ?? FlutterTextPipeline();
 

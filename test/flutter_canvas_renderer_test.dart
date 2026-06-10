@@ -64,47 +64,32 @@ void main() {
     expect(pipeline.lastShader, isNotNull);
   });
 
-  test('display quality profiles map to expected renderer options', () {
-    expect(
-      CanvasRendererProfiles.forDisplayQuality(
-        CanvasDisplayQuality.thumbnail,
-      ).imageFilterQuality,
-      ui.FilterQuality.medium,
+  test(
+    'renderer options default to interactive missing-image placeholders',
+    () {
+      const options = CanvasRendererOptions();
+
+      expect(options.imageFilterQuality, ui.FilterQuality.none);
+      expect(options.missingImageBehavior, MissingImageBehavior.placeholder);
+    },
+  );
+
+  test('renderer options can skip missing images for output paths', () {
+    const options = CanvasRendererOptions(
+      missingImageBehavior: MissingImageBehavior.skip,
     );
 
-    expect(
-      CanvasRendererProfiles.forDisplayQuality(
-        CanvasDisplayQuality.thumbnail,
-      ).missingImageBehavior,
-      MissingImageBehavior.skip,
+    expect(options.imageFilterQuality, ui.FilterQuality.none);
+    expect(options.missingImageBehavior, MissingImageBehavior.skip);
+  });
+
+  test('renderer options preserve explicit image filter quality', () {
+    const options = CanvasRendererOptions(
+      imageFilterQuality: ui.FilterQuality.medium,
+      missingImageBehavior: MissingImageBehavior.skip,
     );
 
-    expect(
-      CanvasRendererProfiles.forDisplayQuality(
-        CanvasDisplayQuality.preview,
-      ).imageFilterQuality,
-      ui.FilterQuality.none,
-    );
-
-    expect(
-      CanvasRendererProfiles.forDisplayQuality(
-        CanvasDisplayQuality.preview,
-      ).missingImageBehavior,
-      MissingImageBehavior.skip,
-    );
-
-    expect(
-      CanvasRendererProfiles.forDisplayQuality(
-        CanvasDisplayQuality.editor,
-      ).imageFilterQuality,
-      ui.FilterQuality.none,
-    );
-
-    expect(
-      CanvasRendererProfiles.forDisplayQuality(
-        CanvasDisplayQuality.editor,
-      ).missingImageBehavior,
-      MissingImageBehavior.placeholder,
-    );
+    expect(options.imageFilterQuality, ui.FilterQuality.medium);
+    expect(options.missingImageBehavior, MissingImageBehavior.skip);
   });
 }
