@@ -30,7 +30,9 @@ class CanvasExportSpec {
     // This keeps the exporter generic and delegates content-selection rules to
     // host applications.
     this.contentBoundsPolicy,
-    this.rendererOptions = CanvasRendererProfiles.documentExport,
+    this.rendererOptions = const CanvasRendererOptions(
+      missingImageBehavior: MissingImageBehavior.skip,
+    ),
   });
 
   final int widthPx;
