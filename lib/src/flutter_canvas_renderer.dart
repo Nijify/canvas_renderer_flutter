@@ -33,6 +33,11 @@ abstract final class CanvasRendererProfiles {
     missingImageBehavior: MissingImageBehavior.skip,
   );
 
+  static const documentExport = CanvasRendererOptions(
+    imageFilterQuality: ui.FilterQuality.none,
+    missingImageBehavior: MissingImageBehavior.skip,
+  );
+
   static const editor = CanvasRendererOptions(
     imageFilterQuality: ui.FilterQuality.none,
     missingImageBehavior: MissingImageBehavior.placeholder,
